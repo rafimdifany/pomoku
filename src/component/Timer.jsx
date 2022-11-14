@@ -15,7 +15,7 @@ const sectionMenu = [
   },
 ]
 
-const Timer = () => {
+export default function Timer() {
 
   const [pomodoroTime, setPomodoroTime] = useState(1500000)
   const [shortBreakTime, setShortBreakTime] = useState(300000)
@@ -23,8 +23,11 @@ const Timer = () => {
   const [active, setActive] = useState(pomodoroTime)
   const [activeSection, setActiveSection] = useState(1)
   const [isPaused, setIsPaused]  = useState(true)
+  const [isStarted, setIsStarted] = useState(false)
 
-  const handleClick = useCallback((activeSection) => {
+  
+
+  const handleClickSection = useCallback((activeSection) => {
     setActiveSection(activeSection);
   })
 
@@ -42,7 +45,46 @@ const Timer = () => {
     }
   }, [activeSection])
 
+  useEffect(() => {
+    let interval = null
+    if(isPaused === false && isStarted) {
+      interval = setInterval(() => {
+        setActive(prev => prev - 1000)
+        switch(activeSection) {
+          case 1:
+            setPomodoroTime(prev => prev - 1000)
+            break
+          case 2:
+            setShortBreakTime(prev => prev - 1000)
+            break
+          case 3:
+            setLongBreakTime(prev => prev - 1000)
+        }
+      },1000)
+    } else {
+      clearInterval(interval)
+    }
 
+    return(() => clearInterval(interval))
+
+  },[isStarted, isPaused])
+
+  const handleClick = () => {
+    isStarted ? handleIsPaused() : handleStart()
+  }
+
+  const handleStart = () => {
+    setIsStarted(true)
+    setIsPaused(false)
+  }
+
+  const handleIsPaused = () => {
+    setIsPaused(true)
+    setIsStarted(false)
+  }
+
+
+  
   
   return (
     <section className="my-10 w-[85%] min-h-[310px] p-5 bg-white/10 rounded-md mx-auto">
@@ -52,7 +94,7 @@ const Timer = () => {
             <li key={data.id} className="mx-1 hover:bg-slate-500/50 rounded transition-colors">
               <button 
               className={`text-white  transition-colors py-1 px-3 rounded-md font-medium ${activeSection == data.id ? "bg-slate-700" : "" }`}
-              onClick={() => handleClick(data.id)}
+              onClick={() => handleClickSection(data.id)}
               >
                 {data.name}
               </button>
@@ -71,11 +113,10 @@ const Timer = () => {
         }</span>
       </div>
       <div className="flex items-center content-center justify-center">
-        <button className="text-[30px] py-2 px-12 bg-white rounded  font-semibold text-slate-800">START</button>
+        <button id="button-start" className="text-[30px] py-2 px-12 bg-white rounded  font-semibold text-slate-800" onClick={handleClick}>{isStarted ? "PAUSE" : "START"}</button>
 
       </div>
     </section>
   )
 }
 
-export default Timer
